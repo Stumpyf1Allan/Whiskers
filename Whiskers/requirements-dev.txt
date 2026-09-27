@@ -1,0 +1,11 @@
+-r requirements.txt
+pytest>=8.0
+pyinstaller>=6.5
+
+# Draws the app icon (tools/make_icons.py). The app itself never needs it.
+Pillow>=10.0
+
+# One test reads .github/workflows/release.yml and checks it against the rest of the
+# project. A workflow with a typo is accepted by git and then silently does nothing,
+# so it is parsed here, before a tag goes up.
+PyYAML>=6.0

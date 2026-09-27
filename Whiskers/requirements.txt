@@ -1,0 +1,15 @@
+# Whiskers runs on Python's standard library alone. Everything below makes it better,
+# and the build bundles all of it.
+
+# Talks to Yahoo's price charts the way a browser does. Without it the app falls back
+# to plain Python networking, which Yahoo sometimes refuses with "Too many requests".
+curl_cffi>=0.15
+
+# The saved Trading 212 key is encrypted with a key kept in Windows Credential Manager
+# or the macOS Keychain (keyring), using AES-GCM (cryptography). Without them the app
+# still works, keeps the key in a file only you can read, and says so in Settings.
+keyring>=24.0; platform_system != "Linux"
+cryptography>=41.0
+
+# A proper app window instead of a browser tab.
+pywebview>=4.4

@@ -1,0 +1,31 @@
+Whiskers - read me first
+========================
+
+Whiskers keeps track of your investments, the limits you set for them, and what markets are
+doing. It only ever reads from your accounts: it cannot buy, sell or move money. Nothing in it
+is financial advice.
+
+1. Open it
+   Windows: double-click Whiskers.exe. The first time, Windows may say "Windows protected your
+   PC" because the app isn't signed: choose More info, then Run anyway.
+   Mac: unzip, drag Whiskers into Applications, then right-click it and choose Open. If the Mac
+   still refuses, go to System Settings > Privacy & Security and choose Open Anyway.
+
+2. Look around
+   A short tour starts the first time. To see every screen working before setting anything
+   up, use the sample portfolio (made up); it comes out again in one click. Remove it before
+   connecting your own accounts.
+
+3. Set it up
+   - Your plan: in Settings, choose "Build a plan from questions", answer ten or so questions,
+     and adjust what it suggests. Or load a plan file someone made for you.
+   - Trading 212: connect with a read-only API key (the app shows you how).
+   - Freetrade: export your activity file from the Freetrade app and import it.
+   - Cash accounts and credit cards: add them in Settings and type the balances in.
+
+4. Your data
+   Everything stays on your own computer, in Whiskers' own data folder (Settings has a button
+   that opens it). Updating or deleting the app never touches it.
+
+5. Updates
+   Whiskers tells you when a new version is ready and downloads it for you.
