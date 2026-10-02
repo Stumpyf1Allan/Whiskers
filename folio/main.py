@@ -67,6 +67,10 @@ def _try_pywebview(url: str) -> bool:
     except Exception:
         return False
     try:
+        # pywebview's embedded window silently swallows every file download unless asked
+        # not to: a click that would save a file anywhere else just does nothing here, with
+        # no error, which is exactly what both the plan-file and spreadsheet exports hit.
+        webview.settings["ALLOW_DOWNLOADS"] = True
         # Maximised, not fullscreen: fullscreen hides the title bar and its close button.
         webview.create_window(config.APP_NAME, url, width=1380, height=900, text_select=True,
                               min_size=(1024, 680), maximized=True)
