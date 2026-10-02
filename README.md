@@ -152,11 +152,11 @@ shared: the phone keeps its own copy of your data.
 
 1. Install **Termux** and **Termux:Widget** from F-Droid. The Google Play build of Termux
    is an experimental one.
-2. Download `Whiskers 0.6.1.zip` to the phone. In Termux, run these, one line at a time:
+2. Download `Whiskers 1.0.0.zip` to the phone. In Termux, run these, one line at a time:
 
        termux-setup-storage
        pkg install -y unzip
-       cp ~/storage/downloads/"Whiskers 0.6.1.zip" ~/ && cd ~ && unzip -o "Whiskers 0.6.1.zip"
+       cp ~/storage/downloads/"Whiskers 1.0.0.zip" ~/ && cd ~ && unzip -o "Whiskers 1.0.0.zip"
        bash ~/Whiskers/phone/start-whiskers.sh
 
    The first start installs Python, which takes a few minutes, then opens Whiskers in
@@ -175,6 +175,22 @@ shared: the phone keeps its own copy of your data.
 On the phone, other apps can reach the same local address, so Whiskers answers only
 requests carrying a key that lives in its own private folder. The start-up link hands
 that key to Chrome once; Chrome keeps it for Whiskers alone.
+
+## Exporting your data
+
+Settings has an **Export to a spreadsheet** button, under "Updates and your data". It
+makes a single Excel file with everything in it:
+
+- **Summary** — your totals, each platform, and your ISA allowance.
+- **Holdings** — every holding on every platform: sleeve, shares, cost, value, gain,
+  AI share and where its price came from.
+- **Allocation** — every sleeve's target against what you actually hold.
+- **Dividends**, **Trades** and **Cash movements** — the full history behind those
+  figures, not just the last year.
+
+It's built fresh from the same numbers the app itself shows, so it can't drift from the
+screen. "Hide amounts" doesn't affect it: exporting is a deliberate request for the real
+figures, for your own records, an accountant, or deeper analysis in a spreadsheet.
 
 ## Sharing with family and friends
 

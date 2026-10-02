@@ -1274,8 +1274,9 @@ async function vSettings(el) {
         <dt>Updates</dt><dd>${up ? updateWords(up) : 'Unknown'}</dd>
         <dt>Your data</dt><dd class="small">${esc(d.data_dir)}</dd>
         <dt>Keys stored</dt><dd class="small">${d.vault === 'os-keychain' ? 'Encrypted, with the key in your computer\u2019s own credential store' : 'Encrypted in the data folder (no credential store was found on this computer)'}</dd></dl>
-      <div class="row wrap" style="margin-top:10px">${up && up.status !== 'off' ? '<button class="btn" data-act="upd-check">Check for an update</button>' : ''}<button class="btn" data-act="open-data">Open the data folder</button><button class="btn" data-act="tour">Take the tour</button>
+      <div class="row wrap" style="margin-top:10px">${up && up.status !== 'off' ? '<button class="btn" data-act="upd-check">Check for an update</button>' : ''}<button class="btn" data-act="export-xlsx">Export to a spreadsheet</button><button class="btn" data-act="open-data">Open the data folder</button><button class="btn" data-act="tour">Take the tour</button>
         <label class="row small"><input type="checkbox" data-act="toggle-refresh" ${s.refresh_on_open ? 'checked' : ''}>Refresh when Whiskers opens</label></div>
+      <p class="note" style="margin-top:6px">Export to a spreadsheet makes an Excel file of everything: your holdings, dividends, trades, cash movements and how you\u2019re allocated against your plan.</p>
     </section>
     <p class="note">Whiskers is a personal tool for keeping to your own plan. It is not financial advice. It only ever reads from your platforms and cannot place a trade.</p>
   </div>`;
@@ -1444,6 +1445,18 @@ ACTS['plan-export'] = async () => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   } catch (e) { toast(e.message, true); }
+};
+ACTS['export-xlsx'] = async b => {
+  await busy(b, async () => {
+    const res = await api('/api/export/xlsx');
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${S.boot.app.name} export ${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast('Downloaded.');
+  });
 };
 ACTS['limits-save'] = async b => {
   await busy(b, async () => {

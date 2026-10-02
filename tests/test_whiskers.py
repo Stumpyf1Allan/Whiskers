@@ -20,8 +20,8 @@ import pytest
 
 from folio import config, db
 from folio.brokers import freetrade, monzo, symbols, tbills, trading212
-from folio.engine import (allocation, isa, mathx, narrative, plan, planbuilder, playbook, portfolio,
-                          rules, sample, signals, stress)
+from folio.engine import (allocation, export, isa, mathx, narrative, plan, planbuilder, playbook,
+                          portfolio, rules, sample, signals, stress)
 from folio.market import sources, store
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -1117,3 +1117,77 @@ def test_a_secure_pension_never_pushes_past_what_someone_is_willing_to_take():
     bold = planbuilder.build({"horizon": "over20", "guaranteed": "most", "fall": "buy",
                               "experience": "long", "prefer": "growth"})
     assert bold["growth"] > 90 and all(len(x) == 2 for x in bold["sources"])
+
+
+
+# ============================================================================ the spreadsheet export
+
+def test_the_export_has_every_sheet_with_real_figures_in_them():
+    sleeve("Technology & AI", 60, ai_share=100)
+    sleeve("Cash", 40, is_cash=True)
+    pid = add_platform("Freetrade ISA", cash=500)
+    iid = add_position(pid, "NVDA", qty=10, cost=900, broker_value=1200, valued_at=db.now(), name="NVIDIA")
+    db.execute("UPDATE instruments SET sleeve_id=(SELECT id FROM sleeves WHERE name='Technology & AI') "
+              "WHERE id=?", (iid,))
+    with db.tx() as c:
+        c.execute("INSERT INTO dividends(platform_id,instrument_id,paid_on,amount_gbp,fp) VALUES"
+                  "(?,?,'2026-06-01',12.5,'d1')", (pid, iid))
+        c.execute("INSERT INTO trades(platform_id,instrument_id,traded_on,side,quantity,value_gbp,fp) "
+                  "VALUES(?,?,'2026-01-01','BUY',10,900,'t1')", (pid, iid))
+        c.execute("INSERT INTO cash_moves(platform_id,happened_on,kind,amount_gbp,fp) VALUES"
+                  "(?,'2026-01-01','DEPOSIT',1000,'c1')", (pid,))
+
+    import io
+    from openpyxl import load_workbook
+    wb = load_workbook(io.BytesIO(export.build()))
+    assert wb.sheetnames == ["Summary", "Holdings", "Allocation", "Dividends", "Trades", "Cash movements"]
+
+    hold = {c.value: i for i, c in enumerate(next(wb["Holdings"].iter_rows(min_row=1, max_row=1)), 1)}
+    row = next(wb["Holdings"].iter_rows(min_row=2, max_row=2))
+    assert row[hold["Name"] - 1].value == "NVIDIA"
+    assert row[hold["Cost (£)"] - 1].value == 900 and row[hold["Value (£)"] - 1].value == 1200
+    assert row[hold["Shares"] - 1].value == 10
+    assert row[hold["AI share"] - 1].value == pytest.approx(1.0)       # a fraction, not 100
+    assert wb["Holdings"]["A1"].fill.fgColor.rgb == "000B6E6E"          # the brand colour header
+
+    alloc = {c.value: i for i, c in enumerate(next(wb["Allocation"].iter_rows(min_row=1, max_row=1)), 1)}
+    tech_row = next(r for r in wb["Allocation"].iter_rows(min_row=2) if r[alloc["Sleeve"] - 1].value == "Technology & AI")
+    assert tech_row[alloc["Target"] - 1].value == pytest.approx(0.6)
+    assert tech_row[alloc["Target"] - 1].number_format == "0.0%"
+
+    div_row = next(wb["Dividends"].iter_rows(min_row=2, max_row=2))
+    assert div_row[2].value == "NVIDIA" and div_row[4].value == 12.5
+    assert next(wb["Trades"].iter_rows(min_row=2, max_row=2))[4].value == "Bought"
+    assert next(wb["Cash movements"].iter_rows(min_row=2, max_row=2))[2].value == "Paid in"
+
+
+def test_an_empty_copy_exports_without_error():
+    import io
+    from openpyxl import load_workbook
+    wb = load_workbook(io.BytesIO(export.build()))
+    assert wb["Holdings"].max_row == 1 and wb["Summary"]["A1"].value.startswith("Whiskers")
+
+
+def test_the_export_route_sends_a_real_xlsx_as_an_attachment(server):
+    status, body, headers = _req(server, "/api/export/xlsx")
+    assert status == 200
+    assert headers["Content-Type"] == \
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert "Whiskers export" in headers["Content-Disposition"] and ".xlsx" in headers["Content-Disposition"]
+    assert body[:2] == b"PK"                       # every xlsx is a zip file
+    import io
+    from openpyxl import load_workbook
+    load_workbook(io.BytesIO(body))                # raises if the bytes aren't a real workbook
+
+
+def test_a_treasury_bill_shows_its_value_source_in_plain_words():
+    sleeve("Cash", 100, is_cash=True)
+    pid = add_platform("Freetrade ISA")
+    rows = [_bill_row("GB00BSGQD757", (dt.date.today() - dt.timedelta(days=5)).isoformat(), 1010)]
+    freetrade.import_csv(pid, _ft(FT_NEW, rows))
+    import io
+    from openpyxl import load_workbook
+    wb = load_workbook(io.BytesIO(export.build()))
+    hold = {c.value: i - 1 for i, c in enumerate(next(wb["Holdings"].iter_rows(min_row=1, max_row=1)), 1)}
+    row = next(wb["Holdings"].iter_rows(min_row=2, max_row=2))
+    assert row[hold["Value source"]].value == "Treasury bill, at cost"

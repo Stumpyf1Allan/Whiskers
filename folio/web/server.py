@@ -24,8 +24,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .. import config, db, net, security, updates
 from ..brokers import freetrade, monzo, symbols, trading212
-from ..engine import (allocation, isa, mathx, narrative, plan, planbuilder, playbook, portfolio, rules,
-                      sample, signals, stress)
+from ..engine import (allocation, export, isa, mathx, narrative, plan, planbuilder, playbook, portfolio,
+                      rules, sample, signals, stress)
 from ..market import catalogue, sources, store
 
 STATIC = pathlib.Path(__file__).resolve().parent / "static"
@@ -773,6 +773,18 @@ def api_plan_questions(req, m, q, body):
 def api_plan_build(req, m, q, body):
     """A draft only: nothing is saved until the person chooses to use it."""
     return planbuilder.build((body or {}).get("answers") or {})
+
+
+@route("GET", "/api/export/xlsx")
+def api_export_xlsx(req, m, q, body):
+    try:
+        blob = export.build()
+    except Exception as e:
+        db.log("export.error", {"detail": str(e)})
+        raise ApiError("Couldn't build the spreadsheet. The details are in the log inside the "
+                       f"{config.APP_NAME} data folder.") from None
+    return {"_file": blob, "_name": export.filename(),
+            "_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
 
 
 @route("GET", "/api/plan/export")

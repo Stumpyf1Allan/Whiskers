@@ -13,3 +13,7 @@ cryptography>=41.0
 
 # A proper app window instead of a browser tab.
 pywebview>=4.4
+
+# Builds the "Export to a spreadsheet" file. Pure Python — nothing compiled, so it
+# bundles into the built app the same simple way as the standard library does.
+openpyxl>=3.1

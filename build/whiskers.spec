@@ -31,7 +31,7 @@ datas = [(str(PKG / "web" / "static"), "web/static")]
 binaries = []
 # cffi's compiled backend is imported from C inside curl_cffi, where PyInstaller's
 # analysis cannot see it; without it the built app quietly fell back to plain Python.
-hiddenimports = ["sqlite3", "webbrowser", "json", "csv", "_cffi_backend", "cffi"]
+hiddenimports = ["sqlite3", "webbrowser", "json", "csv", "_cffi_backend", "cffi", "openpyxl"]
 
 # curl_cffi carries a compiled libcurl. collect_all brings the library, its data and
 # its submodules; without it the frozen app would quietly fall back to plain urllib
